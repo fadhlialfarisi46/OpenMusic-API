@@ -3,6 +3,7 @@ const { nanoid } = require('nanoid');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
+const AuthenticationError = require('../../exceptions/AuthenticationError');
 const { mapPlaylistsDBToModel } = require('../../utils');
 
 class PlaylistsService {
@@ -36,7 +37,7 @@ class PlaylistsService {
     };
 
     const result = await this._pool.query(query);
-    const mappedResult = result.rows.map(mapDBToModel);
+    const mappedResult = result.rows.map(mapPlaylistsDBToModel);
 
     return mappedResult;
   }
