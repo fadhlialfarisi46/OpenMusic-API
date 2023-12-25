@@ -17,7 +17,6 @@ exports.up = async (pgm) => {
         },
     });
 
-    // Create a foreign key constraint using pgm.createConstraint
     await pgm.addConstraint('playlists', 'fk_playlists.owner_users.id', 'FOREIGN KEY(owner) REFERENCES users(id) ON DELETE CASCADE');
 
   };

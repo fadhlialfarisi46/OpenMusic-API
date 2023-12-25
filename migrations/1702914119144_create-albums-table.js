@@ -1,5 +1,3 @@
-/* eslint-disable camelcase */
-
 exports.up = async (pgm) => {
     await pgm.createTable('albums', {
       id: { type: 'varchar(50)', primaryKey: true },

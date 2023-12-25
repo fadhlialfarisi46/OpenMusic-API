@@ -123,7 +123,7 @@ const init = async () => {
 
     server.ext('onPreResponse', (request, h) => {
       const { response } = request;
-
+      console.log(response)
       if (response instanceof Error) {
  
         // penanganan client error secara internal.
@@ -136,7 +136,7 @@ const init = async () => {
           return newResponse;
         }
 
-        if (error instanceof NotFoundError) {
+        if (response instanceof NotFoundError) {
           const response = h.response({
             status: 'fail',
             message: error.message,
@@ -145,7 +145,7 @@ const init = async () => {
           return response;
         }
         
-        if (error instanceof AuthenticationError) {
+        if (response instanceof AuthenticationError) {
           const response = h.response({
             status: 'fail',
             message: error.message,
@@ -154,7 +154,7 @@ const init = async () => {
           return response;
         }
         
-        if (error instanceof AuthorizationError) {
+        if (response instanceof AuthorizationError) {
           const response = h.response({
             status: 'fail',
             message: error.message,
@@ -163,7 +163,7 @@ const init = async () => {
           return response;
         }
         
-        if (error instanceof InvariantError) {
+        if (response instanceof InvariantError) {
           const response = h.response({
             status: 'fail',
             message: error.message,
