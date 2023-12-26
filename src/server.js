@@ -36,14 +36,26 @@ const AuthenticationsService = require('./services/postgres/AuthenticationsServi
 const TokenManager = require('./tokenize/TokenManager');
 const AuthenticationsValidator = require('./validator/authentications');
 
+// Exports
+const _exports = require('./api/exports');
+const ProducerService = require('./services/rabbitmq/ProducerService');
+const ExportsValidator = require('./validator/exports');
 
+// Storage
+const StorageService = require('./services/storage/StorageService');
+
+// cache
+const CacheService = require('./services/redis/CacheService');
+ 
 const init = async () => {
-    const albumsService = new AlbumsService();
+    const cacheService = new CacheService();
+    const albumsService = new AlbumsService(cacheService);
     const songsService = new SongsService();
     const usersService = new UsersService();
     const playlistService = new PlaylistsService();
     const authenticationsService = new AuthenticationsService();
-    
+    const storageService = new StorageService('uploads/album/cover');
+
     const server = Hapi.server({
       port: process.env.PORT,
       host: process.env.HOST,
@@ -86,6 +98,7 @@ const init = async () => {
         plugin: albums,
         options: {
           service: albumsService,
+          storageService: storageService,
           validator: AlbumsValidator,
         },
       },
@@ -117,6 +130,14 @@ const init = async () => {
           usersService,
           tokenManager: TokenManager,
           validator: AuthenticationsValidator,
+        },
+      },
+      {
+        plugin: _exports,
+        options: {
+          service: ProducerService,
+          playlistsService: playlistService,
+          validator: ExportsValidator,
         },
       },
     ]);

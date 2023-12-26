@@ -108,7 +108,6 @@ class PlaylistsService {
 
     return result.rows[0].id;
   }
-
   
   async deletePlaylistSongById(playlistId, songId) {
     const query = {
@@ -123,8 +122,7 @@ class PlaylistsService {
     }
   }
 
-
-  async verifyPlaylistOwner(playlistId, owner) {
+  async verifyPlaylistOwner(playlistId, owner) {    
     const query = {
       text: 'SELECT * FROM playlists WHERE id = $1',
       values: [playlistId],
