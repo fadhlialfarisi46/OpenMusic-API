@@ -15,13 +15,16 @@
     "@hapi/hapi": "^20.2.1",
     "@hapi/inert": "^6.0.3",
     "@hapi/jwt": "^2.0.1",
+    "amqplib": "^0.8.0",
     "auto-bind": "^4.0.0",
     "bcrypt": "^5.0.1",
     "dotenv": "^16.3.1",
     "joi": "^17.11.0",
     "nanoid": "^3.0.0",
     "node-pg-migrate": "^6.2.2",
-    "pg": "^8.11.3"
+    "nodemailer": "^6.9.7",
+    "pg": "^8.11.3",
+    "redis": "^4.6.12"
   },
   "devDependencies": {
     "eslint": "^8.31.0",
