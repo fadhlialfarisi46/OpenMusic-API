@@ -1,8 +1,14 @@
 require('dotenv').config();
 
 const ClientError = require('./exceptions/ClientError');
+const NotFoundError = require('./exceptions/NotFoundError');
+const AuthorizationError = require('./exceptions/AuthorizationError');
+const AuthenticationError = require('./exceptions/AuthenticationError');
+const InvariantError = require('./exceptions/InvariantError');
 
 const Hapi = require('@hapi/hapi');
+const Jwt = require('@hapi/jwt');
+const Inert = require('@hapi/inert');
 
 // albums
 const albums = require('./api/albums');
@@ -14,10 +20,30 @@ const songs = require('./api/songs');
 const SongsService = require('./services/postgres/SongsService');
 const SongsValidator = require('./validator/songs');
 
+// users
+const users = require('./api/users');
+const UsersService = require('./services/postgres/UsersService');
+const UsersValidator = require('./validator/users');
+
+// playlists
+const playlists = require('./api/playlists');
+const PlaylistsService = require('./services/postgres/PlaylistsService');
+const PlaylistsValidator = require('./validator/playlists');
+
+// authentications
+const authentications = require('./api/authentications');
+const AuthenticationsService = require('./services/postgres/AuthenticationsService');
+const TokenManager = require('./tokenize/TokenManager');
+const AuthenticationsValidator = require('./validator/authentications');
+
+
 const init = async () => {
     const albumsService = new AlbumsService();
     const songsService = new SongsService();
-  
+    const usersService = new UsersService();
+    const playlistService = new PlaylistsService();
+    const authenticationsService = new AuthenticationsService();
+    
     const server = Hapi.server({
       port: process.env.PORT,
       host: process.env.HOST,
@@ -26,6 +52,33 @@ const init = async () => {
           origin: ['*'],
         },
       },
+    });
+
+    // registrasi plugin eksternal
+    await server.register([
+      {
+        plugin: Jwt,
+      },
+      {
+        plugin: Inert,
+      },
+    ]);
+
+    // mendefinisikan strategy autentikasi jwt
+    server.auth.strategy('openmusicapp_jwt', 'jwt', {
+      keys: process.env.ACCESS_TOKEN_KEY,
+      verify: {
+        aud: false,
+        iss: false,
+        sub: false,
+        maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+      },
+      validate: (artifacts) => ({
+        isValid: true,
+        credentials: {
+          id: artifacts.decoded.payload.id,
+        },
+      }),
     });
   
     await server.register([
@@ -43,11 +96,34 @@ const init = async () => {
           validator: SongsValidator,
         },
       },
+      {
+        plugin: users,
+        options: {
+          service: usersService,
+          validator: UsersValidator,
+        },
+      },
+      {
+        plugin: playlists,
+        options: {
+          service: playlistService,
+          validator: PlaylistsValidator,
+        },
+      },
+      {
+        plugin: authentications,
+        options: {
+          authenticationsService,
+          usersService,
+          tokenManager: TokenManager,
+          validator: AuthenticationsValidator,
+        },
+      },
     ]);
 
     server.ext('onPreResponse', (request, h) => {
       const { response } = request;
-
+      console.log(response)
       if (response instanceof Error) {
  
         // penanganan client error secara internal.
@@ -60,7 +136,34 @@ const init = async () => {
           return newResponse;
         }
 
-        if (error instanceof NotFoundError) {
+        if (response instanceof NotFoundError) {
+          const response = h.response({
+            status: 'fail',
+            message: error.message,
+          });
+          response.code(error.statusCode);
+          return response;
+        }
+        
+        if (response instanceof AuthenticationError) {
+          const response = h.response({
+            status: 'fail',
+            message: error.message,
+          });
+          response.code(error.statusCode);
+          return response;
+        }
+        
+        if (response instanceof AuthorizationError) {
+          const response = h.response({
+            status: 'fail',
+            message: error.message,
+          });
+          response.code(error.statusCode);
+          return response;
+        }
+        
+        if (response instanceof InvariantError) {
           const response = h.response({
             status: 'fail',
             message: error.message,
